@@ -1,0 +1,13 @@
+# ft_onion - server torrc
+# Publishes a hidden service that forwards:
+#   virtual port 80   -> nginx  on 127.0.0.1:80
+#   virtual port 4242 -> sshd   on 127.0.0.1:4242
+# Nothing outside Tor can reach these; no host ports are published.
+
+DataDirectory /var/lib/tor
+Log notice stdout
+RunAsDaemon 0
+
+HiddenServiceDir /var/lib/tor/hidden_service/
+HiddenServicePort 80 127.0.0.1:80
+HiddenServicePort 4242 127.0.0.1:4242

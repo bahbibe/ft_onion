@@ -1,0 +1,26 @@
+services:
+  server:
+    build: ./server
+    volumes:
+      - hidden_service:/var/lib/tor/hidden_service
+    networks:
+      - onion_net
+    # No ports: section - the hidden service is reachable only through
+    # Tor (torrc), never through a host-published port.
+
+  client:
+    build: ./client
+    tty: true
+    stdin_open: true
+    depends_on:
+      - server
+    networks:
+      - onion_net
+    # No ports: section - this container only ever reaches the server
+    # through its own Tor SOCKS proxy and the .onion address.
+
+volumes:
+  hidden_service:
+
+networks:
+  onion_net:

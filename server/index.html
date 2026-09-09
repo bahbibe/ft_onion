@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ft_onion</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0b0b0d;
+    color: #e4ded1;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  main {
+    max-width: 38rem;
+    padding: 2.5rem;
+    border: 1px solid #3a352c;
+    border-radius: 4px;
+    background: #121214;
+  }
+  h1 {
+    margin-top: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 1.4rem;
+    color: #cbb26a;
+  }
+  p { line-height: 1.6; }
+  .layers { display: flex; gap: 4px; margin: 1.5rem 0; }
+  .layers span {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #cbb26a;
+    opacity: 0.25;
+  }
+  .layers span:nth-child(1) { opacity: 0.85; }
+  .layers span:nth-child(2) { opacity: 0.65; }
+  .layers span:nth-child(3) { opacity: 0.45; }
+  footer { font-size: 0.8rem; color: #6b6558; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Onion Road</h1>
+  <p>
+    Long before packets, caravans carried silk, glass and gunpowder across
+    Asia in secret, each merchant only ever knowing the trader on either
+    side of him &mdash; never the whole route.
+  </p>
+  <p>
+    This page travels the same way: wrapped in layer after layer of
+    encryption, relayed hand to hand through the Tor network, so that no
+    single point along the road ever sees where it began or where it ends.
+  </p>
+  <div class="layers"><span></span><span></span><span></span></div>
+  <footer>ft_onion &mdash; served entirely as a Tor hidden service.</footer>
+</main>
+</body>
+</html>
