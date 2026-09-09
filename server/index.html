@@ -5,100 +5,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ft_onion</title>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --bg: #0b0b0d;
+    --panel: #121214;
+    --panel-2: #17171a;
+    --border: #322d24;
+    --gold: #cbb26a;
+    --gold-bright: #e6cd8a;
+    --ink: #e4ded1;
+    --ink-dim: #948c78;
+    --ink-faint: #625a48;
+  }
   * { box-sizing: border-box; }
+  html { font-size: 19px; }
   body {
     margin: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #0b0b0d;
-    color: #e4ded1;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1a1712 0%, var(--bg) 55%);
+    color: var(--ink);
     font-family: Georgia, "Times New Roman", serif;
-    padding: 2.5rem 1rem;
+    padding: 4rem 1.5rem 2.5rem;
   }
-  main {
-    width: 100%;
-    max-width: 46rem;
-  }
+  main { width: 100%; max-width: 60rem; }
+
   h1 {
-    margin: 0 0 0.25rem;
-    letter-spacing: 0.08em;
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-    font-size: 1.4rem;
-    color: #cbb26a;
+    font-size: 2.3rem;
+    font-weight: 400;
+    color: var(--gold-bright);
     text-align: center;
   }
   .subtitle {
     text-align: center;
-    color: #6b6558;
-    font-size: 0.85rem;
-    margin-bottom: 2rem;
+    color: var(--ink-faint);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 3rem;
   }
-  p { line-height: 1.6; }
+  p { line-height: 1.65; font-size: 1.05rem; }
+
   .card {
-    border: 1px solid #3a352c;
-    border-radius: 4px;
-    background: #121214;
-    padding: 1.75rem;
-    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.7);
+  }
+
+  /* --- step progress --- */
+  .steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.6rem;
+    gap: 4px;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    position: relative;
+    padding-top: 1.7rem;
+  }
+  .step::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 2px solid var(--ink-faint);
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .step.done { color: var(--ink-dim); }
+  .step.done::before { border-color: var(--gold); background: var(--gold); }
+  .step.current { color: var(--gold-bright); }
+  .step.current::before {
+    border-color: var(--gold-bright);
+    background: var(--gold-bright);
+    box-shadow: 0 0 0 5px rgba(203, 178, 106, 0.2);
   }
 
   /* --- circuit visualizer --- */
-  #circuit { width: 100%; height: 220px; display: block; }
+  .canvas-wrap { position: relative; }
+  #circuit { width: 100%; height: 280px; display: block; }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1.1rem;
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+  }
+  .status-row .hop-count { color: var(--ink-faint); }
+
   .controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 1.5rem;
   }
   button {
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    background: #cbb26a;
-    color: #0b0b0d;
-    border: none;
-    border-radius: 3px;
-    padding: 0.6rem 1.1rem;
+    border-radius: 5px;
+    padding: 0.85rem 1.7rem;
     cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, opacity 0.15s, border-color 0.15s;
   }
-  button:disabled { opacity: 0.4; cursor: default; }
-  button:not(:disabled):hover { background: #ddc684; }
-  .layer-count {
-    font-size: 0.8rem;
-    color: #948c78;
+  button.primary {
+    background: var(--gold);
+    color: #17140c;
   }
-  .log {
-    margin-top: 1rem;
-    font-family: ui-monospace, "SF Mono", Consolas, monospace;
-    font-size: 0.78rem;
-    color: #a89f8b;
-    min-height: 3.4em;
-    line-height: 1.7;
-    white-space: pre-wrap;
+  button.primary:not(:disabled):hover { background: var(--gold-bright); }
+  button.ghost {
+    background: transparent;
+    color: var(--ink-dim);
+    border-color: var(--border);
   }
-  .log .hop { color: #cbb26a; }
+  button.ghost:not(:disabled):hover {
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+  button:disabled { opacity: 0.35; cursor: default; }
 
-  .layers { display: flex; gap: 4px; margin: 1.5rem 0; }
+  .log {
+    margin-top: 1.75rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--border);
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.92rem;
+    color: var(--ink-dim);
+    min-height: 5.4em;
+    line-height: 1.85;
+  }
+  .log div { opacity: 0; animation: fadeIn 0.3s forwards; }
+  .log .hop { color: var(--gold); }
+  .log .note { color: var(--ink-faint); font-style: italic; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .layers { display: flex; gap: 5px; margin: 2.25rem 0 0.75rem; }
   .layers span {
     flex: 1;
     height: 6px;
     border-radius: 3px;
-    background: #cbb26a;
-    opacity: 0.25;
+    background: var(--gold);
+    opacity: 0.22;
   }
   .layers span:nth-child(1) { opacity: 0.85; }
-  .layers span:nth-child(2) { opacity: 0.65; }
-  .layers span:nth-child(3) { opacity: 0.45; }
+  .layers span:nth-child(2) { opacity: 0.6; }
+  .layers span:nth-child(3) { opacity: 0.4; }
   footer {
-    font-size: 0.8rem;
-    color: #6b6558;
-    margin-top: 0.5rem;
+    font-size: 0.92rem;
+    color: var(--ink-faint);
     text-align: center;
   }
 </style>
@@ -106,7 +183,7 @@
 <body>
 <main>
   <h1>The Onion Road</h1>
-  <div class="subtitle">a live look at how this very page reached you</div>
+  <div class="subtitle">a hop-by-hop look at how this page reached you</div>
 
   <div class="card">
     <p>
@@ -122,12 +199,24 @@
   </div>
 
   <div class="card">
-    <canvas id="circuit" width="900" height="220"></canvas>
-    <div class="controls">
-      <button id="sendBtn">Send a packet</button>
-      <span class="layer-count" id="layerCount"></span>
+    <div class="steps" id="steps"></div>
+
+    <div class="canvas-wrap">
+      <canvas id="circuit"></canvas>
     </div>
-    <div class="log" id="log">Press "Send a packet" to watch one hop-by-hop.</div>
+
+    <div class="status-row">
+      <span id="hopLabel">At: You</span>
+      <span class="hop-count" id="hopCount">Step 1 of 5</span>
+    </div>
+
+    <div class="controls">
+      <button class="ghost" id="backBtn">&larr; Back</button>
+      <button class="primary" id="nextBtn">Next &rarr;</button>
+      <button class="ghost" id="replayBtn">&#8635; Replay</button>
+    </div>
+
+    <div class="log" id="log"></div>
   </div>
 
   <div class="layers"><span></span><span></span><span></span></div>
@@ -138,45 +227,81 @@
 (function () {
   "use strict";
 
-  var canvas = document.getElementById("circuit");
-  var ctx = canvas.getContext("2d");
-  var W = canvas.width, H = canvas.height;
-
   // Circuit hops: you -> guard -> middle -> rendezvous -> hidden service.
   // Mirrors what the project's torrc / Tor Network Basics notes describe:
   // each relay only ever knows the hop immediately before and after it.
   var nodes = [
-    { key: "you",   label: "You",             x: 60,  y: H / 2, knows: "nothing but its own guard" },
-    { key: "guard",  label: "Guard relay",     x: 260, y: H / 2, knows: "your IP, not your destination" },
-    { key: "middle", label: "Middle relay",    x: 460, y: H / 2, knows: "neither your IP nor the destination" },
-    { key: "rp",     label: "Rendezvous",      x: 660, y: H / 2, knows: "splices two circuits, sees neither endpoint" },
-    { key: "hs",     label: "ft_onion",        x: 860, y: H / 2, knows: "the request, not your IP" }
+    { label: "You",          short: "You",     msg: "Packet built at You, wrapped in 4 layers of encryption." },
+    { label: "Guard relay",  short: "Guard",    msg: "Guard relay peels one layer. Knows your IP, not your destination." },
+    { label: "Middle relay", short: "Middle",   msg: "Middle relay peels another layer. Knows neither your IP nor the destination." },
+    { label: "Rendezvous",   short: "Rendezvous", msg: "Rendezvous point splices two circuits. Sees neither endpoint." },
+    { label: "ft_onion",     short: "ft_onion", msg: "Final layer removed. Request arrives at ft_onion, unwrapped." }
   ];
+  var totalLayers = nodes.length - 1;
 
-  function drawStatic() {
-    ctx.clearRect(0, 0, W, H);
+  var canvas = document.getElementById("circuit");
+  var ctx = canvas.getContext("2d");
+  var stepsEl = document.getElementById("steps");
+  var backBtn = document.getElementById("backBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var replayBtn = document.getElementById("replayBtn");
+  var logEl = document.getElementById("log");
+  var hopLabelEl = document.getElementById("hopLabel");
+  var hopCountEl = document.getElementById("hopCount");
 
-    // path
+  var step = 0;      // which node the packet currently sits at (0..totalLayers)
+  var animating = false;
+  var cssW = 0, cssH = 0, dpr = 1;
+
+  // Build the step-progress dots once.
+  nodes.forEach(function (n) {
+    var el = document.createElement("div");
+    el.className = "step";
+    el.textContent = n.short;
+    stepsEl.appendChild(el);
+  });
+
+  function nodeX(i) {
+    var margin = 55;
+    return margin + (cssW - margin * 2) * (i / (nodes.length - 1));
+  }
+  function nodeY() { return cssH / 2; }
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+    cssW = rect.width;
+    cssH = rect.height;
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    render();
+  }
+
+  function drawTrack() {
+    ctx.clearRect(0, 0, cssW, cssH);
+
     ctx.strokeStyle = "#3a352c";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(nodes[0].x, nodes[0].y);
-    for (var i = 1; i < nodes.length; i++) ctx.lineTo(nodes[i].x, nodes[i].y);
+    ctx.moveTo(nodeX(0), nodeY());
+    ctx.lineTo(nodeX(nodes.length - 1), nodeY());
     ctx.stroke();
 
-    nodes.forEach(function (n) {
+    nodes.forEach(function (n, i) {
+      var x = nodeX(i), y = nodeY();
       ctx.beginPath();
-      ctx.arc(n.x, n.y, 16, 0, Math.PI * 2);
+      ctx.arc(x, y, 21, 0, Math.PI * 2);
       ctx.fillStyle = "#121214";
       ctx.fill();
-      ctx.strokeStyle = "#cbb26a";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = i <= step ? "#cbb26a" : "#3a352c";
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      ctx.fillStyle = "#a89f8b";
-      ctx.font = "12px Georgia, serif";
+      ctx.fillStyle = i <= step ? "#c9c0aa" : "#5a5343";
+      ctx.font = "16px Georgia, serif";
       ctx.textAlign = "center";
-      ctx.fillText(n.label, n.x, n.y + 34);
+      ctx.fillText(n.label, x, y + 44);
     });
   }
 
@@ -184,95 +309,126 @@
   // that shrink by one every time it reaches a node - one layer of
   // encryption peeled per hop, same as the real thing.
   function drawPacket(x, y, layers) {
-    var maxLayers = 4;
     for (var l = 0; l < layers; l++) {
-      var r = 10 - l * 2;
+      var r = 13 - l * 3;
       if (r <= 0) break;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(203,178,106," + (0.9 - l * 0.15) + ")";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(230,205,138," + (0.95 - l * 0.15) + ")";
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
     ctx.beginPath();
-    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
     ctx.fillStyle = "#e4ded1";
     ctx.fill();
   }
 
-  var btn = document.getElementById("sendBtn");
-  var log = document.getElementById("log");
-  var layerCountEl = document.getElementById("layerCount");
-  var running = false;
+  // Only adds/removes the lines that actually changed, so stepping
+  // forward/back doesn't restart the fade-in animation on lines that
+  // were already showing (that flickered the whole log on every click).
+  function renderLog() {
+    var msgLines = Array.prototype.filter.call(logEl.children, function (c) {
+      return !c.classList.contains("note");
+    });
+    var desired = step + 1;
 
-  function appendLog(text, isHop) {
-    var line = document.createElement("div");
-    if (isHop) {
+    while (msgLines.length > desired) {
+      logEl.removeChild(msgLines.pop());
+    }
+    for (var i = msgLines.length; i < desired; i++) {
+      var line = document.createElement("div");
       var strong = document.createElement("span");
       strong.className = "hop";
-      strong.textContent = text;
+      strong.textContent = nodes[i].label + ": ";
       line.appendChild(strong);
-    } else {
-      line.textContent = text;
+      line.appendChild(document.createTextNode(nodes[i].msg));
+      logEl.appendChild(line);
     }
-    log.appendChild(line);
-    log.scrollTop = log.scrollHeight;
+
+    var existingNote = logEl.querySelector(".note");
+    if (step === nodes.length - 1 && !existingNote) {
+      var note = document.createElement("div");
+      note.className = "note";
+      note.textContent = "No single relay above saw both your IP and this destination.";
+      logEl.appendChild(note);
+    } else if (step !== nodes.length - 1 && existingNote) {
+      logEl.removeChild(existingNote);
+    }
   }
 
-  function animateSegment(from, to, layers, duration, onDone) {
-    var start = null;
-    function step(ts) {
+  function renderSteps() {
+    var els = stepsEl.children;
+    for (var i = 0; i < els.length; i++) {
+      els[i].className = "step" + (i < step ? " done" : i === step ? " current" : "");
+    }
+  }
+
+  function render() {
+    drawTrack();
+    var layers = totalLayers - step;
+    drawPacket(nodeX(step), nodeY(), layers);
+    renderSteps();
+    renderLog();
+    hopLabelEl.textContent = "At: " + nodes[step].label;
+    hopCountEl.textContent = "Step " + (step + 1) + " of " + nodes.length + " · " + layers + " layer" + (layers === 1 ? "" : "s") + " remaining";
+    backBtn.disabled = animating || step === 0;
+    nextBtn.disabled = animating || step === nodes.length - 1;
+    replayBtn.disabled = animating || step === 0;
+  }
+
+  function animateTo(target, layersDuring, duration, done) {
+    animating = true;
+    backBtn.disabled = nextBtn.disabled = replayBtn.disabled = true;
+    var from = step, start = null;
+    function frame(ts) {
       if (!start) start = ts;
       var t = Math.min(1, (ts - start) / duration);
-      var x = from.x + (to.x - from.x) * t;
-      var y = from.y + (to.y - from.y) * t;
-      drawStatic();
-      drawPacket(x, y, layers);
+      var x = nodeX(from) + (nodeX(target) - nodeX(from)) * t;
+      drawTrack();
+      drawPacket(x, nodeY(), layersDuring);
       if (t < 1) {
-        requestAnimationFrame(step);
+        requestAnimationFrame(frame);
       } else {
-        onDone();
+        animating = false;
+        done();
       }
     }
-    requestAnimationFrame(step);
+    requestAnimationFrame(frame);
   }
 
-  function send() {
-    if (running) return;
-    running = true;
-    btn.disabled = true;
-    log.innerHTML = "";
-    var totalLayers = nodes.length - 1; // one layer per relay hop
-    layerCountEl.textContent = totalLayers + " encryption layers wrapped";
-
-    appendLog("Building circuit → encrypting once per hop…");
-
-    var i = 0;
-    function nextHop() {
-      if (i >= nodes.length - 1) {
-        appendLog(nodes[nodes.length - 1].label + ": request arrives, unwrapped.", true);
-        appendLog("No single relay above saw both your IP and this destination.");
-        layerCountEl.textContent = "0 layers remaining — delivered";
-        running = false;
-        btn.disabled = false;
-        return;
-      }
-      var from = nodes[i], to = nodes[i + 1];
-      var layersLeft = totalLayers - i;
-      animateSegment(from, to, layersLeft, 550, function () {
-        var peeled = to.key === "hs" ? "final layer removed" : "one layer peeled";
-        appendLog(to.label + " (" + peeled + "): knows " + to.knows + ".", true);
-        layerCountEl.textContent = Math.max(0, layersLeft - 1) + " encryption layers remaining";
-        i++;
-        setTimeout(nextHop, 250);
-      });
-    }
-    nextHop();
+  function goNext() {
+    if (animating || step >= nodes.length - 1) return;
+    var target = step + 1;
+    var layersDuring = totalLayers - step; // still carrying pre-hop layer count in transit
+    animateTo(target, layersDuring, 500, function () {
+      step = target;
+      render();
+    });
   }
 
-  btn.addEventListener("click", send);
-  drawStatic();
-  layerCountEl.textContent = (nodes.length - 1) + " encryption layers wrapped";
+  function goBack() {
+    if (animating || step <= 0) return;
+    var target = step - 1;
+    var layersDuring = totalLayers - target; // re-gaining the layer on the way back
+    animateTo(target, layersDuring, 400, function () {
+      step = target;
+      render();
+    });
+  }
+
+  function replay() {
+    if (animating) return;
+    step = 0;
+    render();
+  }
+
+  nextBtn.addEventListener("click", goNext);
+  backBtn.addEventListener("click", goBack);
+  replayBtn.addEventListener("click", replay);
+  window.addEventListener("resize", resize);
+
+  resize();
 })();
 </script>
 </body>
