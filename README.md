@@ -81,8 +81,21 @@ docker compose exec client torsocks ssh -i /tmp/id_ed25519 -p 4242 onion@<addres
 
 ## Bonus
 
-Not started until the mandatory part above is fully verified working.
-Planned: SSH fortification (restricted ciphers/MACs, tighter
-`MaxAuthTries`/`LoginGraceTime`, disabled forwarding, etc., layered on
-top of the already key-only baseline) and a more interactive
-application beyond the static page.
+Started only after the mandatory part above was fully verified working.
+
+- **SSH fortification** (`server/sshd_config`) - on top of the mandatory
+  key-only baseline: single `ed25519` host key (RSA dropped), explicit
+  modern-only `KexAlgorithms`/`Ciphers`/`MACs` allowlists, `MaxAuthTries
+  3`, `LoginGraceTime 20`, `ClientAlive*` to drop dead sessions, and
+  `DisableForwarding yes` plus explicit `X11Forwarding`/
+  `AllowAgentForwarding`/`AllowTcpForwarding`/`PermitTunnel no` - this
+  service has no legitimate use for SSH forwarding.
+- **Interactive application** (`server/index.html`) - the same single
+  static file now doubles as a circuit visualizer: an inline
+  canvas/JS animation of a Tor circuit (you → guard → middle →
+  rendezvous → this service), showing one encryption layer peeled per
+  hop and what each relay can and can't see. Deliberately zero external
+  dependencies (no CDN fetch) - still exactly one static `index.html`,
+  still served by nginx alone, satisfying "more impressive than a static
+  page" without touching the "Nginx only, no other framework" mandatory
+  rule.

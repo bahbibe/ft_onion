@@ -2,34 +2,88 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ft_onion</title>
 <style>
   :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
   body {
     margin: 0;
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
     background: #0b0b0d;
     color: #e4ded1;
     font-family: Georgia, "Times New Roman", serif;
+    padding: 2.5rem 1rem;
   }
   main {
-    max-width: 38rem;
-    padding: 2.5rem;
-    border: 1px solid #3a352c;
-    border-radius: 4px;
-    background: #121214;
+    width: 100%;
+    max-width: 46rem;
   }
   h1 {
-    margin-top: 0;
+    margin: 0 0 0.25rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 1.4rem;
     color: #cbb26a;
+    text-align: center;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6b6558;
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
   }
   p { line-height: 1.6; }
+  .card {
+    border: 1px solid #3a352c;
+    border-radius: 4px;
+    background: #121214;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* --- circuit visualizer --- */
+  #circuit { width: 100%; height: 220px; display: block; }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: #cbb26a;
+    color: #0b0b0d;
+    border: none;
+    border-radius: 3px;
+    padding: 0.6rem 1.1rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button:not(:disabled):hover { background: #ddc684; }
+  .layer-count {
+    font-size: 0.8rem;
+    color: #948c78;
+  }
+  .log {
+    margin-top: 1rem;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 0.78rem;
+    color: #a89f8b;
+    min-height: 3.4em;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .log .hop { color: #cbb26a; }
+
   .layers { display: flex; gap: 4px; margin: 1.5rem 0; }
   .layers span {
     flex: 1;
@@ -41,24 +95,185 @@
   .layers span:nth-child(1) { opacity: 0.85; }
   .layers span:nth-child(2) { opacity: 0.65; }
   .layers span:nth-child(3) { opacity: 0.45; }
-  footer { font-size: 0.8rem; color: #6b6558; margin-top: 2rem; }
+  footer {
+    font-size: 0.8rem;
+    color: #6b6558;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 <main>
   <h1>The Onion Road</h1>
-  <p>
-    Long before packets, caravans carried silk, glass and gunpowder across
-    Asia in secret, each merchant only ever knowing the trader on either
-    side of him &mdash; never the whole route.
-  </p>
-  <p>
-    This page travels the same way: wrapped in layer after layer of
-    encryption, relayed hand to hand through the Tor network, so that no
-    single point along the road ever sees where it began or where it ends.
-  </p>
+  <div class="subtitle">a live look at how this very page reached you</div>
+
+  <div class="card">
+    <p>
+      Long before packets, caravans carried silk, glass and gunpowder across
+      Asia in secret, each merchant only ever knowing the trader on either
+      side of him &mdash; never the whole route.
+    </p>
+    <p style="margin-bottom:0">
+      This page travels the same way: wrapped in layers of encryption,
+      relayed hand to hand through the Tor network, so that no single point
+      along the road ever sees where it began or where it ends.
+    </p>
+  </div>
+
+  <div class="card">
+    <canvas id="circuit" width="900" height="220"></canvas>
+    <div class="controls">
+      <button id="sendBtn">Send a packet</button>
+      <span class="layer-count" id="layerCount"></span>
+    </div>
+    <div class="log" id="log">Press "Send a packet" to watch one hop-by-hop.</div>
+  </div>
+
   <div class="layers"><span></span><span></span><span></span></div>
   <footer>ft_onion &mdash; served entirely as a Tor hidden service.</footer>
 </main>
+
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("circuit");
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width, H = canvas.height;
+
+  // Circuit hops: you -> guard -> middle -> rendezvous -> hidden service.
+  // Mirrors what the project's torrc / Tor Network Basics notes describe:
+  // each relay only ever knows the hop immediately before and after it.
+  var nodes = [
+    { key: "you",   label: "You",             x: 60,  y: H / 2, knows: "nothing but its own guard" },
+    { key: "guard",  label: "Guard relay",     x: 260, y: H / 2, knows: "your IP, not your destination" },
+    { key: "middle", label: "Middle relay",    x: 460, y: H / 2, knows: "neither your IP nor the destination" },
+    { key: "rp",     label: "Rendezvous",      x: 660, y: H / 2, knows: "splices two circuits, sees neither endpoint" },
+    { key: "hs",     label: "ft_onion",        x: 860, y: H / 2, knows: "the request, not your IP" }
+  ];
+
+  function drawStatic() {
+    ctx.clearRect(0, 0, W, H);
+
+    // path
+    ctx.strokeStyle = "#3a352c";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(nodes[0].x, nodes[0].y);
+    for (var i = 1; i < nodes.length; i++) ctx.lineTo(nodes[i].x, nodes[i].y);
+    ctx.stroke();
+
+    nodes.forEach(function (n) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 16, 0, Math.PI * 2);
+      ctx.fillStyle = "#121214";
+      ctx.fill();
+      ctx.strokeStyle = "#cbb26a";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#a89f8b";
+      ctx.font = "12px Georgia, serif";
+      ctx.textAlign = "center";
+      ctx.fillText(n.label, n.x, n.y + 34);
+    });
+  }
+
+  // Packet: a dot carrying N onion layers, drawn as concentric rings
+  // that shrink by one every time it reaches a node - one layer of
+  // encryption peeled per hop, same as the real thing.
+  function drawPacket(x, y, layers) {
+    var maxLayers = 4;
+    for (var l = 0; l < layers; l++) {
+      var r = 10 - l * 2;
+      if (r <= 0) break;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(203,178,106," + (0.9 - l * 0.15) + ")";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = "#e4ded1";
+    ctx.fill();
+  }
+
+  var btn = document.getElementById("sendBtn");
+  var log = document.getElementById("log");
+  var layerCountEl = document.getElementById("layerCount");
+  var running = false;
+
+  function appendLog(text, isHop) {
+    var line = document.createElement("div");
+    if (isHop) {
+      var strong = document.createElement("span");
+      strong.className = "hop";
+      strong.textContent = text;
+      line.appendChild(strong);
+    } else {
+      line.textContent = text;
+    }
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function animateSegment(from, to, layers, duration, onDone) {
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var t = Math.min(1, (ts - start) / duration);
+      var x = from.x + (to.x - from.x) * t;
+      var y = from.y + (to.y - from.y) * t;
+      drawStatic();
+      drawPacket(x, y, layers);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function send() {
+    if (running) return;
+    running = true;
+    btn.disabled = true;
+    log.innerHTML = "";
+    var totalLayers = nodes.length - 1; // one layer per relay hop
+    layerCountEl.textContent = totalLayers + " encryption layers wrapped";
+
+    appendLog("Building circuit → encrypting once per hop…");
+
+    var i = 0;
+    function nextHop() {
+      if (i >= nodes.length - 1) {
+        appendLog(nodes[nodes.length - 1].label + ": request arrives, unwrapped.", true);
+        appendLog("No single relay above saw both your IP and this destination.");
+        layerCountEl.textContent = "0 layers remaining — delivered";
+        running = false;
+        btn.disabled = false;
+        return;
+      }
+      var from = nodes[i], to = nodes[i + 1];
+      var layersLeft = totalLayers - i;
+      animateSegment(from, to, layersLeft, 550, function () {
+        var peeled = to.key === "hs" ? "final layer removed" : "one layer peeled";
+        appendLog(to.label + " (" + peeled + "): knows " + to.knows + ".", true);
+        layerCountEl.textContent = Math.max(0, layersLeft - 1) + " encryption layers remaining";
+        i++;
+        setTimeout(nextHop, 250);
+      });
+    }
+    nextHop();
+  }
+
+  btn.addEventListener("click", send);
+  drawStatic();
+  layerCountEl.textContent = (nodes.length - 1) + " encryption layers wrapped";
+})();
+</script>
 </body>
 </html>
