@@ -38,11 +38,11 @@ only way into the server is through the Tor hidden service.
 The hidden service's directory (`/var/lib/tor/hidden_service`, holding
 the private key and the generated `hostname`) is a named Docker volume
 (`hidden_service`), not a bind mount - this avoids host UID/GID
-mismatches against the `debian-tor` user Tor runs as in this container
-and requires that directory to be owned by (`chown 700
-debian-tor:debian-tor`, done at container start by `entrypoint.sh`).
-As long as the volume isn't removed, the
-`.onion` address stays the same across rebuilds.
+mismatches against the `debian-tor` user Tor runs as in this container.
+Tor requires that directory to be owned by that user with mode 700
+(`chown debian-tor:debian-tor` + `chmod 700`, done at container start
+by `entrypoint.sh`). As long as the volume isn't removed, the `.onion`
+address stays the same across rebuilds.
 
 ## SSH
 

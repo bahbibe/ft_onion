@@ -7,7 +7,6 @@
 
 Port 4242
 ListenAddress 127.0.0.1
-Protocol 2
 
 # ed25519 only - drop RSA so no legacy algorithm is ever offered.
 HostKey /etc/ssh/ssh_host_ed25519_key
